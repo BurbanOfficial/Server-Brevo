@@ -10,30 +10,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Autoriser votre frontend GitHub Pages
-const allowedOrigins = [
-    'https://burbanofficial.github.io',
-    // ajoutez ici les autres origines si besoin
-  ];
-  
-  app.use(cors({
-    origin: function(origin, callback){
-      // permettre les requêtes “same-origin” (le navigateur peut envoyer origin==undefined pour certains cas)
-      if(!origin) return callback(null, true);
-      if(allowedOrigins.indexOf(origin) === -1){
-        const msg = `L’origine ${origin} n’est pas autorisée par CORS`;
-        return callback(new Error(msg), false);
-      }
-      return callback(null, true);
-    },
-    methods: ['GET','POST','OPTIONS'],
-    allowedHeaders: ['Content-Type']
-  }));
-  
-  // Assurer la prise en charge des pré-vols OPTIONS
-  app.options('*', cors());
-  
-
 // --- CONFIGURATION BREVO ---
 const brevoClient = SibApiV3Sdk.ApiClient.instance;
 brevoClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
