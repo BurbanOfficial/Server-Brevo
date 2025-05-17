@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Burban Loyalty</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="script.js" defer></script>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- SECTION FORMULAIRE -->
+    <div class="form-section">
+      <div id="login-form" class="form active">
+        <p class="subtitle">Nous sommes ravi de vous revoir</p>
+        <h2>Se Connecter à Burban Loyalty</h2>
+        <form onsubmit="login(event)">
+          <div class="input-group">
+            <input type="email" id="login-email" required placeholder="Adresse Email" />
+          </div>
+          <div class="input-group password-group">
+            <input type="password" id="login-password" required placeholder="Mot de passe" />
+            <span class="toggle-password" onclick="togglePassword(this, 'login-password')"><i class="fa-solid fa-eye-low-vision"></i></span> <!-- Eye -->
+          </div>
+          <a href="#" class="forgot" onclick="openResetModal()">Mot de passe oublié ?</a>
+          <br><br><button type="submit">Se connecter</button><br><br>
+        </form>
+        <p class="switch-form">Vous n'avez pas encore de compte ? <a href="#" onclick="switchForm('register')">Créez-le !</a></p>
+      </div>
+
+      <div id="register-form" class="form">
+        <p class="subtitle">Devenez Client Burban</p>
+        <h2>Inscrivez-vous chez Burban</h2>
+        <form onsubmit="register(event)">
+          <div class="input-group"><input type="text" required id="prenom" placeholder="Prénom *" /></div>
+          <div class="input-group"><input type="text" required id="nom" placeholder="Nom *" /></div>
+          <div class="input-group"><input type="email" required id="register-email" placeholder="Adresse Email *" /></div>
+          <div class="input-group password-group">
+            <input type="password" required id="register-password" placeholder="Mot de passe *" />
+            <span class="toggle-password" onclick="togglePassword(this, 'register-password')"><i class="fa-solid fa-eye-low-vision"></i></span> <!-- Eye -->
+          </div>
+          <div class="input-group"><input type="tel" id="phone" placeholder="Numéro de téléphone" /></div>
+          <div class="input-group"><input type="date" id="dob" placeholder="Date de naissance" /></div>
+          <label class="checkbox">
+            <input type="checkbox" id="newsletter" />
+            Je souhaite recevoir les dernières tendances et collections Burban.
+          </label>
+          <br><br><button type="submit">S'inscrire</button><br><br>
+        </form>
+        <p class="switch-form">Je possède déjà un compte chez Burban et souhaite <a href="#" onclick="switchForm('login')">me connecter</a>.</p>
+        <p class="disclaimer">En vous créant un compte chez Burban, vous acceptez toutes nos conditions sans exceptions.</p>
+      </div>
+    </div>
+
+    <!-- SECTION IMAGE / VIDÉO -->
+    <div class="media-section">
+      <video autoplay muted loop>
+        <source src="https://www.w3schools.com/howto/rain.mp4" type="video/mp4">
+        Votre navigateur ne supporte pas la vidéo.
+      </video>
+    </div>
+  </div>
+
+    <!-- Modal 1 : entrer l’email -->
+  <div class="modal" id="modal-reset-email">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('reset-email')">&times;</span>
+      <h3>Réinitialiser votre mot de passe</h3>
+      <form onsubmit="startPasswordReset(event)">
+        <input type="email" id="reset-email-input" placeholder="Adresse Email" required />
+        <button type="submit">Envoyer le code</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2 : saisir le code à 6 chiffres -->
+  <div class="modal" id="modal-reset-code">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('reset-code')">&times;</span>
+      <h3>Entrez le code reçu par email</h3>
+      <div id="code-inputs" class="code-inputs">
+        <!-- on génère dynamiquement 6 inputs -->
+      </div>
+      <div id="spinner" class="spinner" style="display:none;"></div>
+      <p id="reset-message"></p>
+      <button id="resend-btn" onclick="resendCode()" disabled>Renvoyer le code (<span id="timer">30</span>s)</button>
+    </div>
+  </div>
+</body>
+</html>
