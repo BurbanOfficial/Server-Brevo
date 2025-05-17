@@ -33,6 +33,10 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
+app.get('/', (req, res) => {
+    res.send('Bienvenue sur l’API Burban Loyalty');
+  });
+
 // --- ENDPOINT : envoi du code ---
 app.post('/api/send-reset-code', async (req, res) => {
   const { email } = req.body;
