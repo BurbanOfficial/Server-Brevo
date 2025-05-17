@@ -53,7 +53,7 @@ app.post('/api/send-reset-code', async (req, res) => {
 
   try {
     await tranEmailApi.sendTransacEmail({
-      sender: { email: 'noreply@burbanofficial.com', name: 'Burban Loyalty' },
+      sender: { email: 'noreply@burbanofficial.com', name: 'Noreply Burban' },
       to: [{ email }],
       subject: 'Votre code de confirmation — Burban Loyalty',
       htmlContent: `<!DOCTYPE html>
