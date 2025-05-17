@@ -1,4 +1,4 @@
-// server-brevo.js
+// server.js
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -7,24 +7,32 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
-// --- CORS strict pour votre front ---
+// Autoriser votre frontend GitHub Pages
 const allowedOrigins = [
-  'https://burbanofficial.github.io'
-];
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (!allowedOrigins.includes(origin)) {
-      return callback(new Error(`Origine non autorisée par CORS: ${origin}`), false);
-    }
-    return callback(null, true);
-  },
-  methods: ['GET','POST','OPTIONS'],
-  allowedHeaders: ['Content-Type']
-}));
-app.options('*', cors());
+    'https://burbanofficial.github.io',
+    // ajoutez ici les autres origines si besoin
+  ];
+  
+  app.use(cors({
+    origin: function(origin, callback){
+      // permettre les requêtes “same-origin” (le navigateur peut envoyer origin==undefined pour certains cas)
+      if(!origin) return callback(null, true);
+      if(allowedOrigins.indexOf(origin) === -1){
+        const msg = `L’origine ${origin} n’est pas autorisée par CORS`;
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    methods: ['GET','POST','OPTIONS'],
+    allowedHeaders: ['Content-Type']
+  }));
+  
+  // Assurer la prise en charge des pré-vols OPTIONS
+  app.options('*', cors());
+  
 
 // --- CONFIGURATION BREVO ---
 const brevoClient = SibApiV3Sdk.ApiClient.instance;
@@ -32,10 +40,16 @@ brevoClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 // --- STOCKAGE TEMPORAIRE DES CODES ---
+// En production, préférez Redis ou Firestore
 const codesStore = new Map();
+// codesStore : { email: { code: '123456', expiresAt: timestamp } }
+
+// Générer un code 6 chiffres
 function genCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
+
+// Nettoyage périodique
 setInterval(() => {
   const now = Date.now();
   for (const [email, { expiresAt }] of codesStore.entries()) {
@@ -49,14 +63,16 @@ app.post('/api/send-reset-code', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email requis' });
 
   const code = genCode();
-  codesStore.set(email, { code, expiresAt: Date.now() + 15*60*1000 }); // 15 min
+  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 min
+  codesStore.set(email, { code, expiresAt });
 
   try {
     await tranEmailApi.sendTransacEmail({
       sender: { email: 'noreply@burbanofficial.com', name: 'Noreply Burban' },
       to: [{ email }],
-      subject: 'Votre code de confirmation — Burban Loyalty',
-      htmlContent: `<!DOCTYPE html>
+      subject: 'Votre code de confirmation Burban Loyalty',
+      htmlContent: `
+        <!DOCTYPE html>
       <html lang="fr">
       <head>
         <meta charset="UTF-8" />
@@ -94,11 +110,12 @@ app.post('/api/send-reset-code', async (req, res) => {
           </div>
         </div>
       </body>
-      </html>` // votre template complet ici
+      </html>
+      `
     });
     return res.json({ success: true });
   } catch (err) {
-    console.error('Brevo send error', err.response?.status, err.response?.text || err);
+    console.error('Brevo send error', err);
     return res.status(500).json({ error: 'Impossible d’envoyer l’email' });
   }
 });
@@ -106,13 +123,17 @@ app.post('/api/send-reset-code', async (req, res) => {
 // --- ENDPOINT : vérification du code ---
 app.post('/api/verify-reset-code', (req, res) => {
   const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ valid: false });
+
   const entry = codesStore.get(email);
   if (!entry || entry.expiresAt < Date.now() || entry.code !== code) {
     return res.json({ valid: false });
   }
+  // Optionnel : supprimez le code après validation
   codesStore.delete(email);
   return res.json({ valid: true });
 });
 
+// Démarrage
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API en écoute sur :${PORT}`));
