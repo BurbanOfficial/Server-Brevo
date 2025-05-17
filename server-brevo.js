@@ -10,6 +10,16 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// --- CORS Configuration ---
+const corsOptions = {
+    origin: 'https://burbanofficial.github.io',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+    optionsSuccessStatus: 204
+  };
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
+
 // --- CONFIGURATION BREVO ---
 const brevoClient = SibApiV3Sdk.ApiClient.instance;
 brevoClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
